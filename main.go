@@ -30,34 +30,42 @@ func main() {
 
 	var wg sync.WaitGroup
 
-	for _, cusNo := range customer_no {
-		wg.Add(5)
+	totalReq := 25
+	log.Println("Request running:", totalReq)
 
-		go reqPPOBInquiry(cusNo, &wg)
-		log.Printf("PPOBInquiry %v is running now\n", cusNo)
+	for i := 1; i < totalReq/25+1; i++ {
+		for _, cusNo := range customer_no {
+			wg.Add(5)
 
-		go reqPPOBPayment(cusNo, &wg)
-		log.Printf("PPOBPayment %v is running now\n", cusNo)
+			go reqPPOBInquiry(cusNo, &wg, i)
+			log.Printf("PPOBInquiry Customer_No:%v(%v) is running now\n", cusNo, i)
 
-		go reqPPPOBStatus(cusNo, &wg)
-		log.Printf("PPOBStatus %v is running now\n", cusNo)
+			go reqPPOBPayment(cusNo, &wg, i)
+			log.Printf("PPOBPayment Customer_No:%v(%v) is running now\n", cusNo, i)
 
-		go reqTopupBuy(cusNo, &wg)
-		log.Printf("TopupBuy %v is running now\n", cusNo)
+			go reqPPPOBStatus(cusNo, &wg, i)
+			log.Printf("PPOBStatus Customer_No:%v(%v) is running now\n", cusNo, i)
 
-		go reqTopupCheck(cusNo, &wg)
-		log.Printf("TopupCheck %v is running now\n", cusNo)
+			go reqTopupBuy(cusNo, &wg, i)
+			log.Printf("TopupBuy Customer_No:%v(%v) is running now\n", cusNo, i)
 
+			go reqTopupCheck(cusNo, &wg, i)
+			log.Printf("TopupCheck Customer_No:%v(%v) is running now\n", cusNo, i)
+
+			log.Println("")
+		}
+
+		log.Printf("%v request called concurently now\n", totalReq)
 		log.Println("")
+
 	}
-	log.Println("")
 
 	wg.Wait()
 	fmt.Println("Test Finished!")
 	//reqChipsakti(customer_no[1])
 }
 
-func reqPPOBInquiry(customer_no string, wg *sync.WaitGroup) PPOBInquiryResponse {
+func reqPPOBInquiry(customer_no string, wg *sync.WaitGroup, counter int) PPOBInquiryResponse {
 	var response PPOBInquiryResponse
 	var baseUrl = "http://localhost:6010/ppob/inquiry"
 
@@ -71,6 +79,7 @@ func reqPPOBInquiry(customer_no string, wg *sync.WaitGroup) PPOBInquiryResponse 
 		RequestTime:   "2018-05-15 15:10:05",
 	})
 
+	start := time.Now()
 	responseBody := bytes.NewBuffer(reqBody)
 	resp, err := http.Post(baseUrl, "application/json", responseBody)
 
@@ -83,12 +92,14 @@ func reqPPOBInquiry(customer_no string, wg *sync.WaitGroup) PPOBInquiryResponse 
 	body, _ := ioutil.ReadAll(resp.Body)
 	json.Unmarshal(body, &response)
 
-	log.Printf("PPOBInquiry %v || %+v\n", customer_no, response)
+	end := time.Now()
+	log.Printf("PPOBInquiry Customer_No:%v(%v). Request: %v. Response: %v. \nTime Elapsed: %v seconds\n", customer_no, counter, start.Format("01-02 15:04:05.000000"), end.Format("01-02 15:04:05.000000"), end.Sub(start).Seconds())
+	log.Printf("Response:  %+v\n\n", response)
 	wg.Done()
 	return response
 }
 
-func reqPPOBPayment(customer_no string, wg *sync.WaitGroup) PPOBPaymentResponse {
+func reqPPOBPayment(customer_no string, wg *sync.WaitGroup, counter int) PPOBPaymentResponse {
 	var response PPOBPaymentResponse
 	var baseUrl = "http://localhost:6010/ppob/payment"
 
@@ -103,6 +114,7 @@ func reqPPOBPayment(customer_no string, wg *sync.WaitGroup) PPOBPaymentResponse 
 		RequestTime:   "2018-05-15 15:10:05",
 	})
 
+	start := time.Now()
 	responseBody := bytes.NewBuffer(reqBody)
 	resp, err := http.Post(baseUrl, "application/json", responseBody)
 
@@ -115,12 +127,14 @@ func reqPPOBPayment(customer_no string, wg *sync.WaitGroup) PPOBPaymentResponse 
 	body, _ := ioutil.ReadAll(resp.Body)
 	json.Unmarshal(body, &response)
 
-	log.Printf("PPOBPayment %v || %+v\n", customer_no, response)
+	end := time.Now()
+	log.Printf("PPOBPayment Customer_No:%v(%v). Request: %v. Response: %v. \nTime Elapsed: %v seconds\n", customer_no, counter, start.Format("01-02 15:04:05.000000"), end.Format("01-02 15:04:05.000000"), end.Sub(start).Seconds())
+	log.Printf("Response:  %+v\n\n", response)
 	wg.Done()
 	return response
 }
 
-func reqPPPOBStatus(customer_no string, wg *sync.WaitGroup) PPOBStatusResponse {
+func reqPPPOBStatus(customer_no string, wg *sync.WaitGroup, counter int) PPOBStatusResponse {
 	var response PPOBStatusResponse
 	var baseUrl = "http://localhost:6010/ppob/status"
 
@@ -135,6 +149,7 @@ func reqPPPOBStatus(customer_no string, wg *sync.WaitGroup) PPOBStatusResponse {
 		RequestTime:   "2018-05-15 15:10:05",
 	})
 
+	start := time.Now()
 	responseBody := bytes.NewBuffer(reqBody)
 	resp, err := http.Post(baseUrl, "application/json", responseBody)
 
@@ -147,12 +162,14 @@ func reqPPPOBStatus(customer_no string, wg *sync.WaitGroup) PPOBStatusResponse {
 	body, _ := ioutil.ReadAll(resp.Body)
 	json.Unmarshal(body, &response)
 
-	log.Printf("PPOBStatus %v || %+v\n", customer_no, response)
+	end := time.Now()
+	log.Printf("PPOBStatus Customer_No:%v(%v). Request: %v. Response: %v. \nTime Elapsed: %v seconds\n", customer_no, counter, start.Format("01-02 15:04:05.000000"), end.Format("01-02 15:04:05.000000"), end.Sub(start).Seconds())
+	log.Printf("Response:  %+v\n\n", response)
 	wg.Done()
 	return response
 }
 
-func reqTopupBuy(customer_no string, wg *sync.WaitGroup) TopupBuyResponse {
+func reqTopupBuy(customer_no string, wg *sync.WaitGroup, counter int) TopupBuyResponse {
 	var response TopupBuyResponse
 	var baseUrl = "http://localhost:6010/topup/buy"
 
@@ -165,6 +182,7 @@ func reqTopupBuy(customer_no string, wg *sync.WaitGroup) TopupBuyResponse {
 		RequestTime:   "2018-05-15 15:10:05",
 	})
 
+	start := time.Now()
 	responseBody := bytes.NewBuffer(reqBody)
 	resp, err := http.Post(baseUrl, "application/json", responseBody)
 
@@ -177,12 +195,14 @@ func reqTopupBuy(customer_no string, wg *sync.WaitGroup) TopupBuyResponse {
 	body, _ := ioutil.ReadAll(resp.Body)
 	json.Unmarshal(body, &response)
 
-	log.Printf("TopupBuy %v || %+v\n", customer_no, response)
+	end := time.Now()
+	log.Printf("TopupBuy Customer_No:%v(%v). Request: %v. Response: %v. \nTime Elapsed: %v seconds\n", customer_no, counter, start.Format("01-02 15:04:05.000000"), end.Format("01-02 15:04:05.000000"), end.Sub(start).Seconds())
+	log.Printf("Response:  %+v\n\n", response)
 	wg.Done()
 	return response
 }
 
-func reqTopupCheck(customer_no string, wg *sync.WaitGroup) TopupCheckResponse {
+func reqTopupCheck(customer_no string, wg *sync.WaitGroup, counter int) TopupCheckResponse {
 	var response TopupCheckResponse
 	var baseUrl = "http://localhost:6010/topup/check"
 
@@ -195,6 +215,7 @@ func reqTopupCheck(customer_no string, wg *sync.WaitGroup) TopupCheckResponse {
 		RequestTime:   "2018-05-15 15:10:05",
 	})
 
+	start := time.Now()
 	responseBody := bytes.NewBuffer(reqBody)
 	resp, err := http.Post(baseUrl, "application/json", responseBody)
 
@@ -207,7 +228,9 @@ func reqTopupCheck(customer_no string, wg *sync.WaitGroup) TopupCheckResponse {
 	body, _ := ioutil.ReadAll(resp.Body)
 	json.Unmarshal(body, &response)
 
-	log.Printf("TopupCheck %v || %+v\n", customer_no, response)
+	end := time.Now()
+	log.Printf("TopupCheck Customer_No:%v(%v). Request: %v. Response: %v. \nTime Elapsed: %v seconds\n", customer_no, counter, start.Format("01-02 15:04:05.000000"), end.Format("01-02 15:04:05.000000"), end.Sub(start).Seconds())
+	log.Printf("Response:  %+v\n\n", response)
 	wg.Done()
 	return response
 }
